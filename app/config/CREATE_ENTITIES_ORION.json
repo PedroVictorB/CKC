@@ -1,0 +1,113 @@
+{
+  "contextElements":[
+    {
+      "type": "KEY",
+      "isPattern": "false",
+      "id": "key1",
+      "attributes":[
+        {
+          "name": "nome-pessoa",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "id-usuario",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "cpf-cnpj",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "data",
+          "type": "String",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "KEY",
+      "isPattern": "false",
+      "id": "key2",
+      "attributes":[
+        {
+          "name": "nome-pessoa",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "id-usuario",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "cpf-cnpj",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "data",
+          "type": "String",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "KEY",
+      "isPattern": "false",
+      "id": "key3",
+      "attributes":[
+        {
+          "name": "nome-pessoa",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "id-usuario",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "cpf-cnpj",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "data",
+          "type": "String",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "KEY",
+      "isPattern": "false",
+      "id": "key4",
+      "attributes":[
+        {
+          "name": "nome-pessoa",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "id-usuario",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "cpf-cnpj",
+          "type": "String",
+          "value": ""
+        },
+        {
+          "name": "data",
+          "type": "String",
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "updateAction": "APPEND"
+}
