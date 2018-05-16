@@ -1,0 +1,8 @@
+/app/config/config.old
+/app/cache
+/app/config/config.php
+*.log
+.idea/
+.phalcon
+vendor/
+.env
