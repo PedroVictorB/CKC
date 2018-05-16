@@ -13,13 +13,28 @@ use CKC\Utilities\Car as Car;
 
 class KeyController extends ControllerBase
 {
-    public function indexAction($id = 'aa', $nome = 'bb', $cpf = 'cc'){
+    public function indexAction(){
         $client = new GuzzleClient();
-        $token = "";
         $ck = $this->getRandomCarAndKey();
         $id = $this->request->get('id');
         $nome = $this->request->get('nome');
         $cpf = $this->request->get('cpf');
+        $tag = $this->request->get('tag');
+
+        $person = Person::findFirst(array('conditions' => 'tag = ?1 ', 'bind' => array(1 => $tag)));
+
+        if(empty($person)){
+            //Person not registered
+            $person = new Person();
+            $person->tag = $tag;
+            $person->nome = $nome;
+            $person->cpf = $cpf;
+
+            if(!$person->save()){
+                echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING PERSON'));
+                return;
+            }
+        }
         
         try{
             $load = array(
@@ -45,6 +60,11 @@ class KeyController extends ControllerBase
                                 'value' => $cpf
                             ],
                             [
+                                'name' => 'ptag',
+                                'type' => 'String',
+                                'value' => $tag
+                            ],
+                            [
                                 'name' => 'data',
                                 'type' => 'String',
                                 'value' => new DateTime()
@@ -52,7 +72,7 @@ class KeyController extends ControllerBase
                         ]
                     ]
                 ],
-                "updateAction" => "UPDATE"
+                "updateAction" => "APPEND"
             );
 
             $res = $client->post(
@@ -64,7 +84,7 @@ class KeyController extends ControllerBase
                     'headers' => [
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
-                        'X-Auth-Token' => $token
+                        'X-Auth-Token' => ''
                     ],
                     "json" => $load
                 )
@@ -109,6 +129,96 @@ class KeyController extends ControllerBase
         echo json_encode(
             array($ck['car'])
         );
+    }
+
+    public function releaseAction($key = null){
+        if($key == null || $key != 1 || $key != 2 || $key != 3 || $key != 4){
+            echo json_encode(array('ERROR' => 'KEY IS NULL OR INCORRECT (1,2,3,4)'));
+            return;
+        }
+
+        $ckey = Key::findFirst(array('conditions' => 'id = ?1 ', 'bind' => array(1 => $key)));
+
+        if(empty($ckey)){
+            echo json_encode(array('ERROR' => 'NO KEY FOUND'));
+            return;
+        }
+        
+        $ckey->ptag = '';
+
+        if(!$ckey->save()){
+            echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING KEY'));
+            return;
+        }
+
+        $client = new GuzzleClient();
+
+        try{
+            $load = array(
+                'contextElements' => [
+                    [
+                        "type" => "KEY",
+                        "isPattern" => "false",
+                        "id" => "key".$key,
+                        "attributes" => [
+                            [
+                                'name' => 'nome-pessoa',
+                                'type' => 'String',
+                                'value' => ''
+                            ],
+                            [
+                                'name' => 'id-usuario',
+                                'type' => 'String',
+                                'value' => ''
+                            ],
+                            [
+                                'name' => 'cpf-cnpj',
+                                'type' => 'String',
+                                'value' => ''
+                            ],
+                            [
+                                'name' => 'ptag',
+                                'type' => 'String',
+                                'value' => ''
+                            ],
+                            [
+                                'name' => 'data',
+                                'type' => 'String',
+                                'value' => new DateTime()
+                            ]
+                        ]
+                    ]
+                ],
+                "updateAction" => "UPDATE"
+            );
+
+            $res = $client->post(
+                $this->config->CKC->ORION_CONFIGURATION->protocol.'://'
+                .$this->config->CKC->ORION_CONFIGURATION->url.':'
+                .$this->config->CKC->ORION_CONFIGURATION->port
+                .'/v1/updateContext'
+                , array(
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json',
+                        'X-Auth-Token' => ''
+                    ],
+                    "json" => $load
+                )
+
+            );
+        }catch (GuzzleRequestException $e){
+            echo json_encode(
+                array("CKC_STATUS" =>
+                    array(
+                        "code" => $e->getResponse()->getStatusCode(),
+                        "reasonPhrase" => $e->getResponse()->getReasonPhrase(),
+                        "details" => "Error while communicating to ORION (Contact admin)"
+                    )
+                )
+            );
+            return;
+        }
     }
 
     private function getRandomCarAndKey(){

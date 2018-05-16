@@ -11,8 +11,11 @@ use \Phalcon\Mvc\Model;
 class Car extends Model
 {
     public $id;
+    public $tag;
     public $marca;
     public $nome;
     public $placa;
+    public $status;
+    public $ptag;
     
 }

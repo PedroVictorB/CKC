@@ -8,11 +8,8 @@ use \Phalcon\Mvc\Model;
  * Date: 16/05/2018
  * Time: 12:11
  */
-class Person extends Model
+class Key extends Model
 {
     public $id;
-    public $tag;
-    public $nome;
-    public $cpf;
-
+    public $ptag;
 }
