@@ -14,27 +14,36 @@ use CKC\Utilities\Car as Car;
 class KeyController extends ControllerBase
 {
     public function indexAction(){
+        error_log("aaaaa");
         $client = new GuzzleClient();
         $ck = $this->getRandomCarAndKey();
         $id = $this->request->get('id');
         $nome = $this->request->get('nome');
         $cpf = $this->request->get('cpf');
-        $tag = $this->request->get('tag');
+        //$tag = $this->request->get('tag');
+        $tag = 'E2001001250A001514707BC1';
 
         $person = Person::findFirst(array('conditions' => 'tag = ?1 ', 'bind' => array(1 => $tag)));
 
         if(empty($person)){
             //Person not registered
             $person = new Person();
-            $person->tag = $tag;
+            $person->tag = 'E2001001250A001514707BC1';
             $person->nome = $nome;
             $person->cpf = $cpf;
 
             if(!$person->save()){
+                error_log(print_r($person->getMessages(), true));
                 echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING PERSON'));
                 return;
             }
         }
+
+        $key = new Key();
+        $key->id = $ck['key'];
+        $key->ptag = 'E2001001250A001514707BC1';
+
+        $key->save();
         
         try{
             $load = array(
@@ -127,11 +136,13 @@ class KeyController extends ControllerBase
 
         $this->view->disable();
         echo json_encode(
-            array($ck['car'])
+            $ck['car']
         );
     }
 
-    public function releaseAction($key = null){
+    public function releaseAction($key2 = null){
+        error_log(print_r($key2, true));
+        $key = substr($key2, -1);
         if($key == null || $key != 1 || $key != 2 || $key != 3 || $key != 4){
             echo json_encode(array('ERROR' => 'KEY IS NULL OR INCORRECT (1,2,3,4)'));
             return;
@@ -219,6 +230,16 @@ class KeyController extends ControllerBase
             );
             return;
         }
+
+        $res = $client->get(
+            $this->config->CKC->ESP_CONFIGURATION->protocol.'://'
+            .$this->config->CKC->ESP_CONFIGURATION->url.':'
+            .$this->config->CKC->ESP_CONFIGURATION->port.'/'
+            .$key
+        );
+
+        echo json_encode(array('STATUS' => '200'));
+        return;
     }
 
     private function getRandomCarAndKey(){

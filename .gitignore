@@ -6,3 +6,4 @@
 .phalcon
 vendor/
 .env
+cache/
