@@ -39,11 +39,21 @@ class KeyController extends ControllerBase
             }
         }
 
+        $key = Key::findFirst(array('conditions' => 'ptag = ?1 ', 'bind' => array(1 => $tag)));
+
+        if(!empty($key)){
+            echo json_encode(array('ERROR' => 'THIS PERSON HAS A KEY!DON\'T BE GREEDY!'));
+            return;
+        }
+
         $key = new Key();
         $key->id = $ck['key'];
         $key->ptag = 'E2001001250A001514707BC1';
 
-        $key->save();
+        if(!$key->save()){
+            echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING KEY'));
+            return;
+        };
         
         try{
             $load = array(
