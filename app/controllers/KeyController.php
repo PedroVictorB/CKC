@@ -14,21 +14,22 @@ use CKC\Utilities\Car as Car;
 class KeyController extends ControllerBase
 {
     public function indexAction(){
-        error_log("aaaaa");
         $client = new GuzzleClient();
         $ck = $this->getRandomCarAndKey();
         $id = $this->request->get('id');
         $nome = $this->request->get('nome');
         $cpf = $this->request->get('cpf');
         //$tag = $this->request->get('tag');
-        $tag = 'E2001001250A001514707BC1';
+        $tag = $this->config->CKC->ptag;
 
         $person = Person::findFirst(array('conditions' => 'tag = ?1 ', 'bind' => array(1 => $tag)));
+
+        error_log("key: ".$ck['key']);
 
         if(empty($person)){
             //Person not registered
             $person = new Person();
-            $person->tag = 'E2001001250A001514707BC1';
+            $person->tag = $this->config->CKC->ptag;
             $person->nome = $nome;
             $person->cpf = $cpf;
 
@@ -42,13 +43,13 @@ class KeyController extends ControllerBase
         $key = Key::findFirst(array('conditions' => 'ptag = ?1 ', 'bind' => array(1 => $tag)));
 
         if(!empty($key)){
-            echo json_encode(array('ERROR' => 'THIS PERSON HAS A KEY!DON\'T BE GREEDY!'));
+            echo json_encode(array('ERROR' => 0));
             return;
         }
 
         $key = new Key();
         $key->id = $ck['key'];
-        $key->ptag = 'E2001001250A001514707BC1';
+        $key->ptag = $this->config->CKC->ptag;
 
         if(!$key->save()){
             echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING KEY'));
@@ -150,17 +151,22 @@ class KeyController extends ControllerBase
         );
     }
 
-    public function releaseAction($key2 = null){
+    public function releaseAction(){
+        $key2 = $this->request->get("id");
         error_log(print_r($key2, true));
+        error_log("release");
         $key = substr($key2, -1);
-        if($key == null || $key != 1 || $key != 2 || $key != 3 || $key != 4){
-            echo json_encode(array('ERROR' => 'KEY IS NULL OR INCORRECT (1,2,3,4)'));
-            return;
-        }
+        error_log($key == 2 ? 'sim' : 'nao');
+        //if($key != '1' && $key && '2' && $key != '3' && $key != '4'){
+        //    error_log("key wrong");
+        //    echo json_encode(array('ERROR' => 'KEY IS NULL OR INCORRECT (1,2,3,4)'));
+        //    return;
+        //}
 
         $ckey = Key::findFirst(array('conditions' => 'id = ?1 ', 'bind' => array(1 => $key)));
 
         if(empty($ckey)){
+            error_log("2");
             echo json_encode(array('ERROR' => 'NO KEY FOUND'));
             return;
         }
@@ -168,6 +174,7 @@ class KeyController extends ControllerBase
         $ckey->ptag = '';
 
         if(!$ckey->save()){
+            error_log("3");
             echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING KEY'));
             return;
         }

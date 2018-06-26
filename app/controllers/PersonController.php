@@ -18,18 +18,43 @@ class PersonController extends ControllerBase
         $cpf = $this->request->get('cpf');
 
         $this->view->disable();
+
+        error_log("key");
+
+        if(!isset($tag) || empty($tag)){
+            echo json_encode(array('ERROR' => 'TAG IS NULL'));
+            return;
+        }
         
         $key = Key::findFirst(array('conditions' => 'ptag = ?1 ', 'bind' => array(1 => $tag)));
 
         if(empty($key)){
-            echo json_encode(array('ERROR' => 'NO KEY FOUND FOR TAG '.$tag));
+            $client = new GuzzleClient();
+
+            $res = $client->get(
+                $this->config->CKC->ESP_CONFIGURATION->protocol.'://'
+                .$this->config->CKC->ESP_CONFIGURATION->url.':'
+                .$this->config->CKC->ESP_CONFIGURATION->port.'/'
+                .'5'
+            );
+
+            echo json_encode(array('STATUS' => 'SAIDA NAO PERMITIDA - KEY NOT FOUND'));
             return;
         }
         
         $car = Car::findFirst(array('conditions' => 'ptag = ?1 ', 'bind' => array(1 => $tag)));
 
         if(empty($car)){
-            echo json_encode(array('ERROR' => 'NO CAR FOUND FOR TAG '.$tag));
+            $client = new GuzzleClient();
+
+            $res = $client->get(
+                $this->config->CKC->ESP_CONFIGURATION->protocol.'://'
+                .$this->config->CKC->ESP_CONFIGURATION->url.':'
+                .$this->config->CKC->ESP_CONFIGURATION->port.'/'
+                .'5'
+            );
+
+            echo json_encode(array('STATUS' => 'SAIDA NAO PERMITIDA - CAR NOT FOUND'));
             return;
         }
 
@@ -134,6 +159,32 @@ class PersonController extends ControllerBase
                     .'7'
                 );
 
+                $res = $client->post(
+                    'https://onesignal.com/api/v1/notifications'
+                    , array(
+                        'headers' => [
+                            'Content-Type' => 'application/json; charset=utf-8',
+                            'Authorization' => 'Basic YzNiOGUzYjMtZGRiNi00NmU1LTllNzMtMzEzOWE0YTljOWNh'
+                        ],
+                        "json" => [
+                            'app_id' => 'f7f58a8c-eadb-4b4e-9d9f-27c3953057d3',
+                            'included_segments' => ['All'],
+                            'headings' => ['en' => 'Entrada Liberada'],
+                            'contents' => ['en' => 'Iniciando monitoramento..']
+                        ]
+                    )
+
+                );
+
+                error_log(json_encode([
+                    'app_id' => 'f7f58a8c-eadb-4b4e-9d9f-27c3953057d3',
+                    'included_segments' => ['All'],
+                    'headings' => ['en' => 'Entrada Liberada'],
+                    'contents' => ['en' => 'Iniciando monitoramento..']
+                ]));
+
+                error_log(print_r($res, true));
+
                 //liberado
                 echo json_encode(array('STATUS' => 'APPROVED'));
                 return;
@@ -157,5 +208,51 @@ class PersonController extends ControllerBase
         }
 
         echo json_encode(array('ERROR' => 'SOMETHING WRONG IS NOT RIGHT'));
+    }
+
+    public function loginAction(){
+
+        error_log(print_r($this->request->getRawBody(), true));
+        error_log(print_r($this->request->get(), true));
+        error_log($this->request->get("nome")." ".$this->request->get("cpf"));
+        error_log("111");
+        $client = new GuzzleClient();
+        $id = $this->request->get('id');
+        $nome = $this->request->get('nome');
+        $cpf = $this->request->get('cpf');
+        //$tag = $this->request->get('tag');
+        $tag = $this->config->CKC->ptag;
+
+        $this->view->disable();
+
+        $person = Person::findFirst(array('conditions' => 'tag = ?1 ', 'bind' => array(1 => $tag)));
+
+        if(empty($person)){
+            //Person not registered
+            $person = new Person();
+            $person->tag = $this->config->CKC->ptag;
+            $person->nome = $nome;
+            $person->cpf = $cpf;
+
+            if(!$person->save()){
+                error_log(print_r($person->getMessages(), true));
+                echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING PERSON'));
+                return;
+            }
+        }else{
+            if($person->nome != $nome){
+                $person->tag = $this->config->CKC->ptag;
+                $person->nome = $nome;
+                $person->cpf = $cpf;
+
+                if(!$person->save()){
+                    error_log(print_r($person->getMessages(), true));
+                    echo json_encode(array('ERROR' => 'DB ERROR WHILE SAVING PERSON'));
+                    return;
+                }
+            }
+        }
+
+        echo json_encode(['tag' => $this->config->CKC->ptag]);
     }
 }
